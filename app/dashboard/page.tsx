@@ -1,0 +1,5 @@
+import Shell from '@/components/Shell';
+import {query} from '@/lib/db';
+import {currentAdmin} from '@/lib/auth';
+export const dynamic='force-dynamic';
+export default async function Page(){const admin=await currentAdmin();if(!admin)return <Shell><div className="card"><h1>Sign in required</h1><a href="/login">Go to login</a></div></Shell>;let data:any[]=[];let error='';try{data=await Promise.all([query<any>("SELECT COUNT(*) n FROM users"),query<any>("SELECT COUNT(*) n FROM radacct WHERE acctstoptime IS NULL"),query<any>("SELECT COUNT(*) n FROM nas"),query<any>("SELECT COUNT(*) n FROM auth_logs WHERE result='ACCEPT' AND event_time>=NOW()-INTERVAL 24 HOUR")]);}catch(e:any){error=e?.message||'Database unavailable';}return <Shell><div className="toolbar"><h1>Dashboard</h1></div>{error?<div className="notice">{error}. Configure the database environment variables and run the supplied schema.</div>:<div className="grid">{data.map((x:any,i:number)=><div className="card" key={i}><h3>Users</h3><div className="stat">{x[0]?.n??0}</div></div>)}</div>}</Shell>}
