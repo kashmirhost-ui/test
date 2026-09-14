@@ -1,0 +1,4 @@
+import dgram from 'node:dgram';
+
+export function udpProbe(host:string, port:number, timeoutMs=1500){return new Promise<{port:number;reachable:boolean;note:string}>(resolve=>{const s=dgram.createSocket('udp4');let done=false;const finish=(ok:boolean,note:string)=>{if(done)return;done=true;clearTimeout(t);s.close();resolve({port,reachable:ok,note})};const t=setTimeout(()=>finish(false,'No UDP response'),timeoutMs);s.on('error',()=>finish(false,'UDP socket error'));s.on('message',()=>finish(true,'UDP response received'));s.bind(()=>s.send(Buffer.from([0]),port,host,e=>e&&finish(false,'Unable to send UDP probe')))});}
+export async function detectRadius(host:string,authPort=1812,acctPort=1813){const [auth,acct]=await Promise.all([udpProbe(host,authPort),udpProbe(host,acctPort)]);return {host,auth,acct,warning:'UDP reachability does not prove FreeRADIUS is running; use an agent/SSH check for definitive service detection.'}}
