@@ -1,10 +1,12 @@
-import mysql from 'mysql2/promise';
-import bcrypt from 'bcryptjs';
-const username=process.env.ADMIN_USERNAME||'admin';
-const password=process.env.ADMIN_PASSWORD;
-if(!password) throw new Error('Set ADMIN_PASSWORD before running this script');
-const db=await mysql.createConnection({host:process.env.DB_HOST,port:Number(process.env.DB_PORT||3306),user:process.env.DB_USER,password:process.env.DB_PASSWORD||'',database:process.env.DB_NAME});
-const hash=await bcrypt.hash(password,12);
-await db.execute('CREATE TABLE IF NOT EXISTS admins (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, username VARCHAR(100) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL DEFAULT \'admin\', created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(id)) ENGINE=InnoDB');
-await db.execute('INSERT INTO admins(username,password_hash,role) VALUES(?,?,?) ON DUPLICATE KEY UPDATE password_hash=VALUES(password_hash),role=VALUES(role)',[username,hash,'superadmin']);
-await db.end(); console.log('Admin account created/updated:',username);
+import { getApps, initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+const username = process.env.ADMIN_USERNAME || 'admin';
+const password = process.env.ADMIN_PASSWORD;
+if (!password) throw new Error('Set ADMIN_PASSWORD before running this script');
+if (!getApps().length) initializeApp();
+const db = getFirestore();
+const ref = db.collection('admins').doc(username);
+await ref.set({username, role:'superadmin', status:'active', password}, {merge:true});
+console.log('Admin account created/updated:', username);
+console.log('For production, replace the bootstrap password with Firebase Authentication credentials.');
