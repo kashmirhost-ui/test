@@ -14,4 +14,4 @@ Features:
 - Back-button web navigation
 - External phone/email/WhatsApp links open with Android apps
 
-The APK is built by the GitHub Actions workflow on the `yesstudy-android` branch.
+The APK is built automatically by the GitHub Actions workflow on the `yesstudy-android` branch.
